@@ -1,0 +1,29 @@
+package com.nguyenhuy.todo_app.dtos;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import jakarta.validation.constraints.NotBlank;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+public class UserDTO {
+    @JsonProperty("fullname")
+    private String fullName;
+
+    @JsonProperty("password")
+    @NotBlank(message = "Password is required")
+    private String password;
+
+    @JsonProperty("retype_password")   
+    private String retypePassword;
+    
+    @JsonProperty("email")
+    @NotBlank(message = "Email is required")
+    private String email;
+}
