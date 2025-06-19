@@ -8,7 +8,7 @@ import com.nguyenhuy.todo_app.models.TaskList;
 public interface ITaskListService {
     TaskList createTaskList(TaskListDTO taskListDTO) throws Exception;
 
-    List<TaskList> getTaskListsByUserId(Long userId) throws Exception;
+    List<TaskListDTO> getTaskListsByUserId(Long userId) throws Exception;
 
     TaskList getTaskListById(Long taskListId) throws Exception;
 

@@ -2,9 +2,9 @@ package com.nguyenhuy.todo_app.dtos;
 
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -16,7 +16,6 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 public class TaskDTO {
-    @Max(value = 200, message = "Title must not exceed 200 characters")
     @NotBlank(message = "Task title cannot be blank")
     @JsonProperty("title")
     private String title;
@@ -24,10 +23,13 @@ public class TaskDTO {
     @JsonProperty("description")
     private String description;
 
+    @JsonProperty("created_at")
+    private LocalDateTime createdAt;
+
     @JsonProperty("due_date")
+    @JsonFormat(pattern = "dd/MM/yyyy HH:mm:ss")
     private LocalDateTime dueDate;
 
-    @NotBlank(message = "Task status cannot be blank")
     @JsonProperty("completed")
     private boolean completed;
 

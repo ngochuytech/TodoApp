@@ -1,6 +1,7 @@
 package com.nguyenhuy.todo_app.models;
 
 import java.util.Collection;
+import java.util.Collections;
 
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -40,7 +41,7 @@ public class User implements UserDetails{
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return null; // No authorities are defined
+        return Collections.emptyList(); // Assuming no roles/authorities for simplicity
     }
 
     @Override

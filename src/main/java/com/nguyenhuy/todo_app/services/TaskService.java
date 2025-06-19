@@ -44,8 +44,18 @@ public class TaskService implements ITaskService {
     }
 
     @Override
-    public Task getTaskById(Long taskId) throws Exception {
-        return taskRepository.findById(taskId).orElse(null);
+    public TaskDTO getTaskById(Long taskId) throws Exception {
+        Task task = taskRepository.findById(taskId)
+            .orElseThrow(() -> new Exception("Task not found with ID: " + taskId));
+        TaskDTO taskDTO = new TaskDTO();
+        taskDTO.setTitle(task.getTitle());
+        taskDTO.setDescription(task.getDescription());
+        taskDTO.setCreatedAt(task.getCreatedAt());
+        taskDTO.setDueDate(task.getDueDate());
+        taskDTO.setCompleted(task.isCompleted());
+        taskDTO.setUserId(task.getUser().getId());
+        taskDTO.setTaskListId(task.getTaskList().getId());
+        return taskDTO;
     }
 
     @Override
@@ -74,21 +84,77 @@ public class TaskService implements ITaskService {
     }
 
     @Override
-    public List<Task> getAllTasksByUserId(Long userId) throws Exception {
+    public List<TaskDTO> getAllTasksByUserId(Long userId) throws Exception {
         List<Task> tasks = taskRepository.findTasksByUserId(userId);
         if (tasks == null || tasks.isEmpty()) {
             throw new Exception("No tasks found for user with ID: " + userId);
         }
-        return tasks;
+        List<TaskDTO> taskDTOs = tasks.stream().map(task -> new TaskDTO(
+            task.getTitle(),
+            task.getDescription(),
+            task.getCreatedAt(),
+            task.getDueDate(),
+            task.isCompleted(),
+            task.getUser().getId(),
+            task.getTaskList().getId()
+        )).toList();
+        return taskDTOs;
     }
 
     @Override
-    public List<Task> getAllTasksByTaskListId(Long taskListId) throws Exception {
+    public List<TaskDTO> getAllTasksByTaskListId(Long taskListId) throws Exception {
         List<Task> tasks = taskRepository.findTasksByTaskListId(taskListId);
         if (tasks == null || tasks.isEmpty()) {
             throw new Exception("No tasks found for task list with ID: " + taskListId);
         }
-        return tasks;
+        List<TaskDTO> taskDTOs = tasks.stream().map(task -> new TaskDTO(
+            task.getTitle(),
+            task.getDescription(),
+            task.getCreatedAt(),
+            task.getDueDate(),
+            task.isCompleted(),
+            task.getUser().getId(),
+            task.getTaskList().getId()
+        )).toList();
+        return taskDTOs;
+    }
+
+    @Override
+    public List<TaskDTO> getAllTasksUncompledtedByUserId(Long userId) throws Exception {
+        if(userId == null) {
+            throw new Exception("User ID cannot be null");
+        } else if( userRepository.findById(userId).isEmpty()) {
+            throw new Exception("User not found with ID: " + userId);
+        }
+        List<Task> tasks = taskRepository.findTasksByUserIdAndCompletedFalse(userId);
+        return tasks.stream().map(task -> new TaskDTO(
+            task.getTitle(),
+            task.getDescription(),
+            task.getCreatedAt(),
+            task.getDueDate(),
+            task.isCompleted(),
+            task.getUser().getId(),
+            task.getTaskList().getId()
+        )).toList();
+    }
+
+    @Override
+    public List<TaskDTO> getAllTasksUncompletedByTaskListId(Long taskListId) throws Exception {
+        if(taskListId == null) {
+            throw new Exception("Task List ID cannot be null");
+        } else if(taskListRepository.findById(taskListId).isEmpty()){
+            throw new Exception("Task List not found with ID: " + taskListId);
+        }
+        List<Task> tasks = taskRepository.findTaskByTaskListIdAndCompletedFalse(taskListId);
+        return tasks.stream().map(task -> new TaskDTO(
+            task.getTitle(),
+            task.getDescription(),
+            task.getCreatedAt(),
+            task.getDueDate(),
+            task.isCompleted(),
+            task.getUser().getId(),
+            task.getTaskList().getId()
+        )).toList();
     }
     
 }

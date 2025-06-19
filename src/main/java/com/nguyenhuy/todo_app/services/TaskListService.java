@@ -41,8 +41,14 @@ public class TaskListService implements ITaskListService {
     }
 
     @Override
-    public List<TaskList> getTaskListsByUserId(Long userId) throws Exception {
-        return taskListRepository.findByUserId(userId);
+    public List<TaskListDTO> getTaskListsByUserId(Long userId) throws Exception {
+        List<TaskList> taskLists = taskListRepository.findByUserId(userId);
+        if (taskLists.isEmpty()) {
+            throw new Exception("No task lists found for user with ID: " + userId);
+        }
+        return taskLists.stream()
+            .map(taskList -> new TaskListDTO(taskList.getTitle(), taskList.getUser().getId()))
+            .toList();
     }
 
     @Override
@@ -57,7 +63,8 @@ public class TaskListService implements ITaskListService {
         User user = userRepository.findById(taskListDTO.getUserId())
             .orElseThrow(() -> new Exception("User not found with ID: " + taskListDTO.getUserId()));
 
-        if(taskListDTO.getTitle() != null && !taskListDTO.getTitle().isEmpty()) {
+        existingTaskList.setTitle(taskListDTO.getTitle());
+        if(taskListDTO.getTitle() == null || taskListDTO.getTitle().isEmpty()) {
             existingTaskList.setTitle("Default Task List");
         }
         existingTaskList.setUser(user);

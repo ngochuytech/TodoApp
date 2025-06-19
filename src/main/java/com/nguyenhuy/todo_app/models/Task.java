@@ -34,7 +34,7 @@ public class Task extends BaseEntity {
    @Column(name = "description", nullable = false)
    private String description;
 
-   @Column(name = "due_date")
+   @Column(name = "due_date", nullable = false)
    private LocalDateTime dueDate;
    
    @Column(name = "completed", nullable = false)

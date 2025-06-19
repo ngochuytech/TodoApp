@@ -22,19 +22,20 @@ public class UserService implements IUserService{
 
     private final PasswordEncoder passwordEncoder;
 
+    private final JwtTokenUtil jwtTokenUtil;
+
     private final AuthenticationManager authenticationManager;
 
-    private final JwtTokenUtil jwtTokenUtil;
-    
     @Override
     public User createUser(UserDTO userDTO) throws Exception {
         String email = userDTO.getEmail();
         if(userRepository.existsByEmail(email)) {
             throw new Exception("Email already exists");
         }
+        String encodedPassword = passwordEncoder.encode(userDTO.getPassword());
         User newUser = User.builder()
                 .fullName(userDTO.getFullName())
-                .password(userDTO.getPassword())
+                .password(encodedPassword)
                 .email(userDTO.getEmail())
                 .build();
         return userRepository.save(newUser);
@@ -47,15 +48,13 @@ public class UserService implements IUserService{
             throw new Exception("User not found with email: " + email);
         }
         User existingUser = optionalUser.get();
-        if(!passwordEncoder.matches(password, existingUser.getPassword())){
+        if(!passwordEncoder.matches(password, existingUser.getPassword())) {
             throw new Exception("Invalid password");
         }
-
-        UsernamePasswordAuthenticationToken authenticationToken =
-            new UsernamePasswordAuthenticationToken(email, password);
+        UsernamePasswordAuthenticationToken authenticationToken = 
+                new UsernamePasswordAuthenticationToken(existingUser, password, existingUser.getAuthorities());
         authenticationManager.authenticate(authenticationToken);
         return jwtTokenUtil.generateToken(existingUser);
-        
     }
     
 }
