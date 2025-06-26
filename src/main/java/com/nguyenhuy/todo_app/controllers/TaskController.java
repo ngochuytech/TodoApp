@@ -89,8 +89,10 @@ public class TaskController {
             }   
             Task createdTask = taskService.createTask(taskDTO);
             TaskDTO createdTaskDTO = new TaskDTO();
+            createdTaskDTO.setId(createdTask.getId());
             createdTaskDTO.setTitle(createdTask.getTitle());
             createdTaskDTO.setDescription(createdTask.getDescription());
+            createdTaskDTO.setCreatedAt(createdTask.getCreatedAt());
             createdTaskDTO.setDueDate(createdTask.getDueDate());
             createdTaskDTO.setCompleted(createdTask.isCompleted());
             createdTaskDTO.setTaskListId(createdTask.getTaskList().getId());
@@ -113,6 +115,7 @@ public class TaskController {
             }
             Task updatedTask = taskService.updateTask(id, taskDTO);
             TaskDTO updatedTaskDTO = new TaskDTO();
+            updatedTaskDTO.setId(updatedTask.getId());
             updatedTaskDTO.setTitle(updatedTask.getTitle());
             updatedTaskDTO.setDescription(updatedTask.getDescription());
             updatedTaskDTO.setDueDate(updatedTask.getDueDate());

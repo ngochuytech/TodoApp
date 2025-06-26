@@ -47,7 +47,7 @@ public class TaskListService implements ITaskListService {
             throw new Exception("No task lists found for user with ID: " + userId);
         }
         return taskLists.stream()
-            .map(taskList -> new TaskListDTO(taskList.getTitle(), taskList.getUser().getId()))
+            .map(taskList -> new TaskListDTO(taskList.getId() ,taskList.getTitle(), taskList.getUser().getId()))
             .toList();
     }
 

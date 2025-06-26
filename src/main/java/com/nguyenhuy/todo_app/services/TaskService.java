@@ -39,7 +39,7 @@ public class TaskService implements ITaskService {
             .taskList(existingTaskList)
             .user(existingUser)
             .build();
-
+        
         return taskRepository.save(task);
     }
 
@@ -48,6 +48,7 @@ public class TaskService implements ITaskService {
         Task task = taskRepository.findById(taskId)
             .orElseThrow(() -> new Exception("Task not found with ID: " + taskId));
         TaskDTO taskDTO = new TaskDTO();
+        taskDTO.setId(task.getId());
         taskDTO.setTitle(task.getTitle());
         taskDTO.setDescription(task.getDescription());
         taskDTO.setCreatedAt(task.getCreatedAt());
@@ -74,7 +75,7 @@ public class TaskService implements ITaskService {
         existingTask.setCompleted(taskDTO.isCompleted());
         existingTask.setTaskList(existingTaskList);
         existingTask.setUser(existingUser);
-
+        System.out.println("Updating task: " + existingTask);
         return taskRepository.save(existingTask);
     }
 
@@ -90,6 +91,7 @@ public class TaskService implements ITaskService {
             throw new Exception("No tasks found for user with ID: " + userId);
         }
         List<TaskDTO> taskDTOs = tasks.stream().map(task -> new TaskDTO(
+            task.getId(),
             task.getTitle(),
             task.getDescription(),
             task.getCreatedAt(),
@@ -104,10 +106,13 @@ public class TaskService implements ITaskService {
     @Override
     public List<TaskDTO> getAllTasksByTaskListId(Long taskListId) throws Exception {
         List<Task> tasks = taskRepository.findTasksByTaskListId(taskListId);
-        if (tasks == null || tasks.isEmpty()) {
+        if (tasks == null) {
             throw new Exception("No tasks found for task list with ID: " + taskListId);
+        } else if(tasks.isEmpty()) {
+            return null;
         }
         List<TaskDTO> taskDTOs = tasks.stream().map(task -> new TaskDTO(
+            task.getId(),
             task.getTitle(),
             task.getDescription(),
             task.getCreatedAt(),
@@ -128,6 +133,7 @@ public class TaskService implements ITaskService {
         }
         List<Task> tasks = taskRepository.findTasksByUserIdAndCompletedFalse(userId);
         return tasks.stream().map(task -> new TaskDTO(
+            task.getId(),
             task.getTitle(),
             task.getDescription(),
             task.getCreatedAt(),
@@ -147,6 +153,7 @@ public class TaskService implements ITaskService {
         }
         List<Task> tasks = taskRepository.findTaskByTaskListIdAndCompletedFalse(taskListId);
         return tasks.stream().map(task -> new TaskDTO(
+            task.getId(),
             task.getTitle(),
             task.getDescription(),
             task.getCreatedAt(),

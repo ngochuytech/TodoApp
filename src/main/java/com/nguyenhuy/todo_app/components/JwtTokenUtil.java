@@ -31,7 +31,7 @@ public class JwtTokenUtil {
     public String generateToken(User user) throws Exception {
         Map<String, Object> claims = new HashMap<>();
         claims.put("email", user.getEmail());
-        // this.generateSecretKey();
+        claims.put("idUser", user.getId());
         try {
             String token = Jwts.builder()
                 .setClaims(claims)
@@ -49,14 +49,6 @@ public class JwtTokenUtil {
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         return Keys.hmacShaKeyFor(keyBytes);
     }
-
-    // private String generateSecretKey() {
-    //     SecureRandom random = new SecureRandom();
-    //     byte[] keyBytes = new byte[32];
-    //     random.nextBytes(keyBytes);
-    //     String secretKey = Encoders.BASE64.encode(keyBytes);
-    //     return secretKey;
-    // }
 
     private Claims extractAllClaims(String token){
         return Jwts.parserBuilder()

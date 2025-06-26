@@ -13,6 +13,9 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 public class UserDTO {
+    @JsonProperty("id")
+    private Long id;
+    
     @JsonProperty("fullname")
     private String fullName;
 

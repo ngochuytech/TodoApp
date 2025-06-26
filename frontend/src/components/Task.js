@@ -1,0 +1,333 @@
+import React, { useState, useEffect } from 'react';
+import { format, parseISO } from 'date-fns';
+import api from '../api';
+
+const Task = ({ taskListId }) => {
+  const [userId, setUserId] = useState(localStorage.getItem('idUser') || '');
+  const [tasks, setTasks] = useState([]);
+  const [newTaskTitle, setNewTaskTitle] = useState('');
+  const [newTaskDescription, setNewTaskDescription] = useState('');
+  const [newTaskDueDate, setNewTaskDueDate] = useState('');
+  const [editTask, setEditTask] = useState(null);
+  const [error, setError] = useState('');
+  const [showModal, setShowModal] = useState(false);
+
+  useEffect(() => {
+    fetchTasks();
+  }, [taskListId]);
+
+  const fetchTasks = async () => {
+    try {
+      console.log(`Fetching tasks for task list ID: ${taskListId} and user ID: ${userId}`);
+      
+      const response = await api.get(`/api/tasks/task-list/${taskListId}`);
+      setTasks(response.data);
+      setError('');
+    } catch (err) {
+      setError(err.response?.data || 'Failed to fetch tasks');
+    }
+  };
+
+  const handleAddTask = async (e) => {
+    e.preventDefault();
+    if (!newTaskTitle.trim()) {
+      setError('Task title cannot be empty');
+      return;
+    }
+    try {
+      const response = await api.post(`/api/tasks`, {
+        title: newTaskTitle,
+        description: newTaskDescription,
+        due_date: newTaskDueDate || null,
+        completed: false,
+        task_list_id: taskListId,
+        user_id: userId,
+      });
+      setTasks([...tasks, response.data]);
+      setNewTaskTitle('');
+      setNewTaskDescription('');
+      setNewTaskDueDate('');
+      setShowModal(false);
+      setError('');
+    } catch (err) {
+      setError(err.response?.data || 'Failed to create task');
+    }
+  };
+
+  const handleUpdateTask = async (e) => {
+    e.preventDefault();
+    if (!editTask?.title?.trim()) {
+      setError('Task title cannot be empty');
+      return;
+    }
+    if (!editTask.id) {
+      setError('Task ID is missing');
+      return;
+    }
+    try {
+      const response = await api.put(`/api/tasks/${editTask.id}`, {
+        title: editTask.title,
+        description: editTask.description || '',
+        due_date: editTask.due_date || null,
+        completed: editTask.completed,
+        task_list_id: taskListId,
+        user_id: userId,
+      });
+      console.log('Update response:', response.data); // Debug response
+      const updatedTask = {
+        ...editTask,
+        ...response.data,
+      };
+      setTasks(tasks.map((task) => (task.id === editTask.id ? updatedTask : task)));
+      setEditTask(null);
+      setShowModal(false);
+      setError('');
+    } catch (err) {
+      setError(err.response?.data || 'Failed to update task');
+    }
+  };
+
+  const handleDeleteTask = async (id) => {
+    try {
+      await api.delete(`/api/tasks/${id}`);
+      setTasks(tasks.filter((task) => task.id !== id));
+      setError('');
+    } catch (err) {
+      setError(err.response?.data || 'Failed to delete task');
+    }
+  };
+
+  const openAddModal = () => {
+    setNewTaskTitle('');
+    setNewTaskDescription('');
+    setNewTaskDueDate('');
+    setEditTask(null);
+    setShowModal(true);
+  };
+
+  const openEditModal = (task) => {
+    if (!task.id) {
+      setError('Invalid task ID');
+      return;
+    }
+    setEditTask({
+      ...task,
+      dueDate: task.due_date ? format(parseISO(task.due_date), "yyyy-MM-dd'T'HH:mm") : '',
+    });
+    setShowModal(true);
+  };
+
+  const closeModal = () => {
+    setShowModal(false);
+    setError('');
+  };
+
+  const formatDate = (date) => {
+    if (!date) return 'N/A';
+    try {
+      return format(parseISO(date), 'MMM dd, yyyy HH:mm');
+    } catch {
+      return 'Invalid date';
+    }
+  };
+
+  return (
+    <div className="task-container">
+      {error && (
+        <div className="alert alert-danger alert-dismissible fade show" role="alert">
+          {error}
+          <button type="button" className="btn-close" onClick={() => setError('')}></button>
+        </div>
+      )}
+
+      {/* Nút mở modal thêm Task */}
+      <button className="btn btn-success mb-3" onClick={openAddModal}>
+        <i className="bi bi-plus-circle me-1"></i> Add New Task
+      </button>
+
+      {/* Danh sách Task */}
+      <ul className="list-group">
+        {tasks.length === 0 ? (
+          <li
+            key="empty-state"
+            className="list-group-item text-center text-muted d-flex align-items-center justify-content-center"
+            style={{ minHeight: '100px' }}
+          >
+            <i className="bi bi-list-task me-2"></i> No tasks in this list. Add a new task!
+          </li>
+        ) : (
+          tasks.map((task) => (
+            <li
+              key={task.id}
+              className="list-group-item d-flex justify-content-between align-items-start task-item"
+            >
+              <div>
+                <div className="d-flex align-items-center">
+                  <input
+                    type="checkbox"
+                    checked={task.completed}
+                    onChange={async () => {
+                      try {
+                        const response = await api.put(`/api/tasks/${task.id}`, {
+                          title: task.title,
+                          description: task.description || '',
+                          due_date: task.due_date || null,
+                          completed: !task.completed,
+                          task_list_id: taskListId,
+                          user_id: userId,
+                        });
+                        setTasks(tasks.map((t) => (t.id === task.id ? response.data : t)));
+                      } catch (err) {
+                        setError(err.response?.data || 'Failed to update task');
+                      }
+                    }}
+                    className="me-2"
+                  />
+                  <span
+                    style={{
+                      textDecoration: task.completed ? 'line-through' : 'none',
+                      fontWeight: 'bold',
+                    }}
+                  >
+                    {task.title}
+                  </span>
+                </div>
+                {task.description && (
+                  <p className="task-description mt-1 mb-0">
+                    {task.description.length > 50
+                      ? `${task.description.substring(0, 50)}...`
+                      : task.description}
+                    {task.description.length > 50 && (
+                      <button
+                        className="btn btn-link btn-sm p-0 ms-1"
+                        onClick={() => openEditModal(task)}
+                      >
+                        View more
+                      </button>
+                    )}
+                  </p>
+                )}
+                <p className="text-muted small mt-1 mb-0">
+                  <span className="me-3">
+                    <i className="bi bi-calendar me-1"></i>
+                    Created: {formatDate(task.created_at)}
+                  </span>
+                  <span>
+                    <i className="bi bi-calendar-check me-1"></i>
+                    Due: {formatDate(task.due_date)}
+                  </span>
+                </p>
+              </div>
+              <div>
+                <button
+                  className="btn btn-warning btn-sm me-2"
+                  onClick={() => openEditModal(task)}
+                >
+                  <i className="bi bi-pencil me-1"></i> Edit
+                </button>
+                <button
+                  className="btn btn-danger btn-sm"
+                  onClick={() => handleDeleteTask(task.id)}
+                >
+                  <i className="bi bi-trash me-1"></i> Delete
+                </button>
+              </div>
+            </li>
+          ))
+        )}
+      </ul>
+
+      {/* Modal thêm/sửa Task */}
+      <div className={`modal fade ${showModal ? 'show d-block' : ''}`} tabIndex="-1">
+        <div className="modal-dialog modal-dialog-centered">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h5 className="modal-title">{editTask ? 'Edit Task' : 'Add Task'}</h5>
+              <button type="button" className="btn-close" onClick={closeModal}></button>
+            </div>
+            <form onSubmit={editTask ? handleUpdateTask : handleAddTask}>
+              <div className="modal-body">
+                <div className="mb-3">
+                  <label htmlFor="taskTitle" className="form-label">
+                    Title
+                  </label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    id="taskTitle"
+                    value={editTask ? editTask.title : newTaskTitle}
+                    onChange={(e) =>
+                      editTask
+                        ? setEditTask({ ...editTask, title: e.target.value })
+                        : setNewTaskTitle(e.target.value)
+                    }
+                    required
+                  />
+                </div>
+                <div className="mb-3">
+                  <label htmlFor="taskDescription" className="form-label">
+                    Description
+                  </label>
+                  <textarea
+                    className="form-control"
+                    id="taskDescription"
+                    rows="4"
+                    value={editTask ? editTask.description || '' : newTaskDescription}
+                    onChange={(e) =>
+                      editTask
+                        ? setEditTask({ ...editTask, description: e.target.value })
+                        : setNewTaskDescription(e.target.value)
+                    }
+                  ></textarea>
+                </div>
+                <div className="mb-3">
+                  <label htmlFor="taskDueDate" className="form-label">
+                    Due Date
+                  </label>
+                  <input
+                    type="datetime-local"
+                    className="form-control"
+                    id="taskDueDate"
+                    value={editTask ? editTask.due_date : newTaskDueDate}
+                    onChange={(e) =>
+                      editTask
+                        ? setEditTask({ ...editTask, due_date: e.target.value })
+                        : setNewTaskDueDate(e.target.value)
+                    }
+                  />
+                </div>
+                {editTask && (
+                  <div className="form-check mb-3">
+                    <input
+                      type="checkbox"
+                      className="form-check-input"
+                      id="taskCompleted"
+                      checked={editTask.completed}
+                      onChange={(e) =>
+                        setEditTask({ ...editTask, completed: e.target.checked })
+                      }
+                    />
+                    <label className="form-check-label" htmlFor="taskCompleted">
+                      Completed
+                    </label>
+                  </div>
+                )}
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-secondary" onClick={closeModal}>
+                  Close
+                </button>
+                <button type="submit" className="btn btn-primary">
+                  {editTask ? 'Save Changes' : 'Add Task'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+      {showModal && <div className="modal-backdrop fade show"></div>}
+    </div>
+  );
+};
+
+export default Task;

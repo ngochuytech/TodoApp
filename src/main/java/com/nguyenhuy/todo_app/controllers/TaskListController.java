@@ -51,6 +51,7 @@ public class TaskListController {
             }
             TaskList newTaskList = taskListService.createTaskList(taskListDTO);
             TaskListDTO newTaskListDTO = new TaskListDTO();
+            newTaskListDTO.setId(newTaskList.getId());
             newTaskListDTO.setTitle(newTaskList.getTitle());
             newTaskListDTO.setUserId(newTaskList.getUser().getId());
             return ResponseEntity.ok(newTaskListDTO);

@@ -12,6 +12,9 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 public class TaskListDTO {
+    @JsonProperty("id")
+    private Long id;
+    
     @JsonProperty("title")    
     private String title;
 
