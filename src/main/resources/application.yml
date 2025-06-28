@@ -12,7 +12,17 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.MariaDBDialect
         format_sql: true
-
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ngochuymail25@gmail.com
+    password: uytp msqg otvs gjjm
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
 api:
   prefix: api
 jwt:

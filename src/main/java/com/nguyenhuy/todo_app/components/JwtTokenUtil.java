@@ -31,6 +31,7 @@ public class JwtTokenUtil {
     public String generateToken(User user) throws Exception {
         Map<String, Object> claims = new HashMap<>();
         claims.put("email", user.getEmail());
+        claims.put("fullName", user.getFullName());
         claims.put("idUser", user.getId());
         try {
             String token = Jwts.builder()

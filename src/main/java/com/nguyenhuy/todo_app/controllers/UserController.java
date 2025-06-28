@@ -44,8 +44,15 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<String> login(@Valid @RequestBody UserLoginDTO userLoginDTO, BindingResult result){
+    public ResponseEntity<?> login(@Valid @RequestBody UserLoginDTO userLoginDTO, BindingResult result){
         try {
+            if(result.hasErrors()){
+                List<String> errorMesseages = result.getFieldErrors()
+                    .stream()
+                    .map(FieldError::getDefaultMessage)
+                    .toList();
+                return ResponseEntity.badRequest().body(errorMesseages);
+            }
             String token = userService.login(userLoginDTO.getEmail(), userLoginDTO.getPassword());
             
             return ResponseEntity.ok(token);

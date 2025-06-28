@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../api';
+import {toast} from 'react-toastify';
 
 const SignUp = () => {
   const [fullName, setFullName] = useState('');
@@ -12,19 +13,20 @@ const SignUp = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (password !== retypePassword) {
+    if (password != retypePassword) {
       setError('Passwords do not match');
       return;
     }
     try {
-      await axios.post('http://localhost:8080/api/users/register', {
+      await api.post(`/api/users/register`, {
         fullName,
         email,
         password,
-        retypePassword,
-      });
+        retype_password: retypePassword,
+      })
+      toast.success("Register successfully!");
       setError('');
-      navigate('/login'); // Điều hướng đến trang đăng nhập sau khi đăng ký
+      navigate('/login');
     } catch (err) {
       setError(err.response?.data || 'Registration failed');
     }

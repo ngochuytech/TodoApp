@@ -1,27 +1,44 @@
 import React, { useState, useEffect } from 'react';
-import { format, parseISO } from 'date-fns';
+import { format, parseISO, isPast } from 'date-fns';
 import api from '../api';
 
-const Task = ({ taskListId }) => {
-  const [userId, setUserId] = useState(localStorage.getItem('idUser') || '');
+const Task = ({ taskListId, onTaskChange }) => {
+  const [userId, setUserId] = useState(sessionStorage.getItem('idUser') || '');
   const [tasks, setTasks] = useState([]);
+  const [filteredTasks, setFilteredTasks] = useState([]);
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [newTaskDescription, setNewTaskDescription] = useState('');
   const [newTaskDueDate, setNewTaskDueDate] = useState('');
   const [editTask, setEditTask] = useState(null);
   const [error, setError] = useState('');
   const [showModal, setShowModal] = useState(false);
+  const [filter, setFilter] = useState('all');
 
   useEffect(() => {
-    fetchTasks();
-  }, [taskListId]);
+    if (taskListId) {
+      fetchTasks();
+    } else {
+      setError('Invalid Task List ID');
+    }
+  }, [taskListId, filter]);
 
   const fetchTasks = async () => {
     try {
-      console.log(`Fetching tasks for task list ID: ${taskListId} and user ID: ${userId}`);
-      
+      console.log(`Fetching tasks for task list ID: ${taskListId}, filter: ${filter}`);
       const response = await api.get(`/api/tasks/task-list/${taskListId}`);
-      setTasks(response.data);
+      const fetchedTasks = response.data;
+      setTasks(fetchedTasks);
+      if (filter === 'completed') {
+        setFilteredTasks(fetchedTasks.filter(task => task.completed));
+      } else if (filter === 'uncompleted') {
+        setFilteredTasks(fetchedTasks.filter(task => !task.completed));
+      } else if (filter === 'overdue') {
+        setFilteredTasks(fetchedTasks.filter(task => isOverdue(task)));
+      } else if (filter === 'not-overdue') {
+        setFilteredTasks(fetchedTasks.filter(task => !isOverdue(task)));
+      } else {
+        setFilteredTasks(fetchedTasks);
+      }
       setError('');
     } catch (err) {
       setError(err.response?.data || 'Failed to fetch tasks');
@@ -43,12 +60,23 @@ const Task = ({ taskListId }) => {
         task_list_id: taskListId,
         user_id: userId,
       });
-      setTasks([...tasks, response.data]);
+      const newTask = response.data;
+      const updatedTasks = [...tasks, newTask];
+      setTasks(updatedTasks);
+      if (
+        filter === 'all' ||
+        (filter === 'uncompleted' && !newTask.completed) ||
+        (filter === 'overdue' && isOverdue(newTask)) ||
+        (filter === 'not-overdue' && !isOverdue(newTask))
+      ) {
+        setFilteredTasks([...filteredTasks, newTask]);
+      }
       setNewTaskTitle('');
       setNewTaskDescription('');
       setNewTaskDueDate('');
       setShowModal(false);
       setError('');
+      onTaskChange();
     } catch (err) {
       setError(err.response?.data || 'Failed to create task');
     }
@@ -73,15 +101,26 @@ const Task = ({ taskListId }) => {
         task_list_id: taskListId,
         user_id: userId,
       });
-      console.log('Update response:', response.data); // Debug response
-      const updatedTask = {
-        ...editTask,
-        ...response.data,
-      };
-      setTasks(tasks.map((task) => (task.id === editTask.id ? updatedTask : task)));
+      const updatedTask = { ...editTask, ...response.data };
+      const updatedTasks = tasks.map((task) => (task.id === editTask.id ? updatedTask : task));
+      setTasks(updatedTasks);
+      if (filter === 'all') {
+        setFilteredTasks(updatedTasks);
+      } else if (filter === 'completed' && updatedTask.completed) {
+        setFilteredTasks(updatedTasks.filter(task => task.completed));
+      } else if (filter === 'uncompleted' && !updatedTask.completed) {
+        setFilteredTasks(updatedTasks.filter(task => !task.completed));
+      } else if (filter === 'overdue' && isOverdue(updatedTask)) {
+        setFilteredTasks(updatedTasks.filter(task => isOverdue(task)));
+      } else if (filter === 'not-overdue' && !isOverdue(updatedTask)) {
+        setFilteredTasks(updatedTasks.filter(task => !isOverdue(task)));
+      } else {
+        setFilteredTasks(updatedTasks.filter(task => task.id !== updatedTask.id));
+      }
       setEditTask(null);
       setShowModal(false);
       setError('');
+      onTaskChange();
     } catch (err) {
       setError(err.response?.data || 'Failed to update task');
     }
@@ -90,8 +129,21 @@ const Task = ({ taskListId }) => {
   const handleDeleteTask = async (id) => {
     try {
       await api.delete(`/api/tasks/${id}`);
-      setTasks(tasks.filter((task) => task.id !== id));
+      const updatedTasks = tasks.filter((task) => task.id !== id);
+      setTasks(updatedTasks);
+      if (filter === 'all') {
+        setFilteredTasks(updatedTasks);
+      } else if (filter === 'completed') {
+        setFilteredTasks(updatedTasks.filter(task => task.completed));
+      } else if (filter === 'uncompleted') {
+        setFilteredTasks(updatedTasks.filter(task => !task.completed));
+      } else if (filter === 'overdue') {
+        setFilteredTasks(updatedTasks.filter(task => isOverdue(task)));
+      } else if (filter === 'not-overdue') {
+        setFilteredTasks(updatedTasks.filter(task => !isOverdue(task)));
+      }
       setError('');
+      onTaskChange();
     } catch (err) {
       setError(err.response?.data || 'Failed to delete task');
     }
@@ -112,7 +164,7 @@ const Task = ({ taskListId }) => {
     }
     setEditTask({
       ...task,
-      dueDate: task.due_date ? format(parseISO(task.due_date), "yyyy-MM-dd'T'HH:mm") : '',
+      due_date: task.due_date ? format(parseISO(task.due_date), "yyyy-MM-dd'T'HH:mm") : '',
     });
     setShowModal(true);
   };
@@ -131,6 +183,16 @@ const Task = ({ taskListId }) => {
     }
   };
 
+  const isOverdue = (task) => {
+    if (!task.due_date || task.completed) return false;
+    try {
+      const dueDate = parseISO(task.due_date);
+      return isPast(dueDate);
+    } catch {
+      return false;
+    }
+  };
+
   return (
     <div className="task-container">
       {error && (
@@ -140,14 +202,31 @@ const Task = ({ taskListId }) => {
         </div>
       )}
 
-      {/* Nút mở modal thêm Task */}
-      <button className="btn btn-success mb-3" onClick={openAddModal}>
-        <i className="bi bi-plus-circle me-1"></i> Add New Task
-      </button>
+      <div className="mb-3">
+        <label htmlFor="taskFilter" className="form-label me-2">Filter Tasks:</label>
+        <select
+          id="taskFilter"
+          className="form-select w-auto d-inline-block"
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+        >
+          <option value="all">All Tasks</option>
+          <option value="completed">Completed Tasks</option>
+          <option value="uncompleted">Uncompleted Tasks</option>
+          <option value="overdue">Overdue Tasks</option>
+          <option value="not-overdue">Not Overdue Tasks</option>
+        </select>
+        <button
+          className="btn btn-success ms-2"
+          onClick={openAddModal}
+          disabled={!taskListId}
+        >
+          <i className="bi bi-plus-circle me-1"></i> Add New Task
+        </button>
+      </div>
 
-      {/* Danh sách Task */}
       <ul className="list-group">
-        {tasks.length === 0 ? (
+        {filteredTasks.length === 0 ? (
           <li
             key="empty-state"
             className="list-group-item text-center text-muted d-flex align-items-center justify-content-center"
@@ -156,10 +235,10 @@ const Task = ({ taskListId }) => {
             <i className="bi bi-list-task me-2"></i> No tasks in this list. Add a new task!
           </li>
         ) : (
-          tasks.map((task) => (
+          filteredTasks.map((task) => (
             <li
               key={task.id}
-              className="list-group-item d-flex justify-content-between align-items-start task-item"
+              className={`list-group-item d-flex justify-content-between align-items-start task-item ${isOverdue(task) ? 'overdue-task' : ''}`}
             >
               <div>
                 <div className="d-flex align-items-center">
@@ -176,7 +255,23 @@ const Task = ({ taskListId }) => {
                           task_list_id: taskListId,
                           user_id: userId,
                         });
-                        setTasks(tasks.map((t) => (t.id === task.id ? response.data : t)));
+                        const updatedTask = response.data;
+                        const updatedTasks = tasks.map((t) => (t.id === task.id ? updatedTask : t));
+                        setTasks(updatedTasks);
+                        if (filter === 'all') {
+                          setFilteredTasks(updatedTasks);
+                        } else if (filter === 'completed' && updatedTask.completed) {
+                          setFilteredTasks(updatedTasks.filter(t => t.completed));
+                        } else if (filter === 'uncompleted' && !updatedTask.completed) {
+                          setFilteredTasks(updatedTasks.filter(t => !t.completed));
+                        } else if (filter === 'overdue' && isOverdue(updatedTask)) {
+                          setFilteredTasks(updatedTasks.filter(t => isOverdue(t)));
+                        } else if (filter === 'not-overdue' && !isOverdue(updatedTask)) {
+                          setFilteredTasks(updatedTasks.filter(t => !isOverdue(t)));
+                        } else {
+                          setFilteredTasks(updatedTasks.filter(t => t.id !== updatedTask.id));
+                        }
+                        onTaskChange();
                       } catch (err) {
                         setError(err.response?.data || 'Failed to update task');
                       }
@@ -237,7 +332,6 @@ const Task = ({ taskListId }) => {
         )}
       </ul>
 
-      {/* Modal thêm/sửa Task */}
       <div className={`modal fade ${showModal ? 'show d-block' : ''}`} tabIndex="-1">
         <div className="modal-dialog modal-dialog-centered">
           <div className="modal-content">

@@ -41,6 +41,20 @@
 
 body {
   background-color: #f8f9fa;
+  padding-top: 70px;
+}
+
+.navbar {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  position: fixed;
+  top: 0;
+  width: 100%;
+  z-index: 1000;
+}
+
+.navbar-brand {
+  font-size: 1.5rem;
+  font-weight: bold;
 }
 
 .card, .accordion-item {
@@ -102,6 +116,10 @@ body {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
+.list-group-item.task-item.overdue-task {
+  background-color: rgba(255, 0, 0, 0.1);
+}
+
 .task-description {
   color: #6c757d;
   font-size: 0.9rem;
@@ -133,4 +151,22 @@ body {
 
 .text-muted.small {
   font-size: 0.85rem;
+}
+
+.accordion-button:not(.collapsed) {
+  background-color: #f8f9fa;
+  color: #000;
+}
+
+.accordion-button:focus {
+  box-shadow: none;
+}
+
+.form-select.w-auto {
+  width: 200px;
+  display: inline-block;
+}
+
+.accordion-item.completed-task-list {
+  background-color: rgba(40, 167, 69, 0.1); 
 }

@@ -1,23 +1,46 @@
 import React, { useState, useEffect } from 'react';
 import api, { getIdUserFromToken } from '../api';
 import Task from './Task';
+import Header from './Header';
+import { Collapse } from 'bootstrap';
 
 const TaskList = () => {
   const [taskLists, setTaskLists] = useState([]);
   const [newListTitle, setNewListTitle] = useState('');
   const [editList, setEditList] = useState(null);
-  const [userId, setUserId] = useState(localStorage.getItem('idUser') || '');
+  const [userId, setUserId] = useState(sessionStorage.getItem('idUser') || '');
   const [error, setError] = useState('');
   const [showEditModal, setShowEditModal] = useState(false);
+  const [completedTaskLists, setCompletedTaskLists] = useState({}); // Track completed task lists
 
   useEffect(() => {
     fetchTaskLists();
   }, []);
 
+  useEffect(() => {
+    const accordionItems = document.querySelectorAll('.accordion-collapse');
+    accordionItems.forEach((item) => {
+      new Collapse(item, {
+        toggle: false,
+        parent: '#taskListAccordion',
+      });
+    });
+  }, [taskLists]);
+
   const fetchTaskLists = async () => {
     try {
       const response = await api.get(`/api/task-lists/${userId}`);
-      setTaskLists(response.data);
+      console.log('TaskLists fetched:', response.data);
+      const lists = response.data;
+      setTaskLists(lists);
+      // Check completion status for each task list
+      const completionStatus = {};
+      for (const list of lists) {
+        const tasksResponse = await api.get(`/api/tasks/task-list/${list.id}`);
+        const tasks = tasksResponse.data;
+        completionStatus[list.id] = tasks.length > 0 && tasks.every(task => task.completed);
+      }
+      setCompletedTaskLists(completionStatus);
       setError('');
     } catch (err) {
       setError(err.response?.data || 'Failed to fetch task lists');
@@ -35,7 +58,9 @@ const TaskList = () => {
         title: newListTitle,
         user_id: userId,
       });
-      setTaskLists([...taskLists, response.data]);
+      const newList = response.data;
+      setTaskLists([...taskLists, newList]);
+      setCompletedTaskLists({ ...completedTaskLists, [newList.id]: true });
       setNewListTitle('');
       setError('');
     } catch (err) {
@@ -67,6 +92,9 @@ const TaskList = () => {
     try {
       await api.delete(`/api/task-lists/${id}`);
       setTaskLists(taskLists.filter((list) => list.id !== id));
+      const updatedCompletedTaskLists = { ...completedTaskLists };
+      delete updatedCompletedTaskLists[id];
+      setCompletedTaskLists(updatedCompletedTaskLists);
       setError('');
     } catch (err) {
       setError(err.response?.data || 'Failed to delete task list');
@@ -84,8 +112,22 @@ const TaskList = () => {
     setError('');
   };
 
+  const handleTaskChange = async (taskListId) => {
+    try {
+      const tasksResponse = await api.get(`/api/tasks/task-list/${taskListId}`);
+      const tasks = tasksResponse.data;
+      setCompletedTaskLists({
+        ...completedTaskLists,
+        [taskListId]: tasks.length > 0 && tasks.every(task => task.completed),
+      });
+    } catch (err) {
+      console.error('Failed to refresh task list status:', err);
+    }
+  };
+
   return (
     <div className="task-list-container">
+      <Header />
       <h2 className="text-center mb-4">My Task Lists</h2>
       {error && (
         <div className="alert alert-danger alert-dismissible fade show" role="alert">
@@ -94,7 +136,6 @@ const TaskList = () => {
         </div>
       )}
 
-      {/* Form thêm TaskList */}
       <form onSubmit={handleAddTaskList} className="mb-4">
         <div className="input-group">
           <input
@@ -110,22 +151,24 @@ const TaskList = () => {
         </div>
       </form>
 
-      {/* Danh sách TaskList */}
       <div className="accordion" id="taskListAccordion">
         {taskLists.length === 0 ? (
           <div className="text-center text-muted my-4">
             <i className="bi bi-list-task me-2"></i> You have no task lists yet. Create one!
           </div>
         ) : (
-          taskLists.map((list) => (
-            <div className="accordion-item" key={list.id}>
+          taskLists.map((list, index) => (
+            <div
+              key={list.id}
+              className={`accordion-item ${completedTaskLists[list.id] ? 'completed-task-list' : ''}`}
+            >
               <h2 className="accordion-header" id={`heading${list.id}`}>
                 <button
                   className="accordion-button"
                   type="button"
                   data-bs-toggle="collapse"
                   data-bs-target={`#collapse${list.id}`}
-                  aria-expanded="true"
+                  aria-expanded={index === 0 ? 'true' : 'false'}
                   aria-controls={`collapse${list.id}`}
                 >
                   {list.title}
@@ -133,7 +176,7 @@ const TaskList = () => {
               </h2>
               <div
                 id={`collapse${list.id}`}
-                className="accordion-collapse collapse show"
+                className={`accordion-collapse collapse ${index === 0 ? 'show' : ''}`}
                 aria-labelledby={`heading${list.id}`}
                 data-bs-parent="#taskListAccordion"
               >
@@ -152,7 +195,7 @@ const TaskList = () => {
                       <i className="bi bi-trash me-1"></i> Delete
                     </button>
                   </div>
-                  <Task taskListId={list.id} />
+                  {list.id && <Task taskListId={list.id} onTaskChange={() => handleTaskChange(list.id)} />}
                 </div>
               </div>
             </div>
@@ -160,7 +203,6 @@ const TaskList = () => {
         )}
       </div>
 
-      {/* Modal chỉnh sửa TaskList */}
       <div className={`modal fade ${showEditModal ? 'show d-block' : ''}`} tabIndex="-1">
         <div className="modal-dialog modal-dialog-centered">
           <div className="modal-content">

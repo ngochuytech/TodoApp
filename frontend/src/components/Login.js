@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { getIdUserFromToken } from '../api';
+import { getIdUserFromToken, getUserNameFromToken, getEmailFromToken} from '../api';
+import {toast} from 'react-toastify';
+
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -16,12 +18,21 @@ const Login = () => {
         password,
       });
       sessionStorage.setItem('token', response.data);
-      const idUser = getIdUserFromToken();
-      console.log("User ID from token:", idUser);
-      
-      sessionStorage.setItem('idUser', idUser);
+      sessionStorage.setItem('username', getUserNameFromToken());
+      sessionStorage.setItem('idUser', getIdUserFromToken());
+      toast.success("Login successful!");
+      await axios.get("http://localhost:8080/send-email", {
+        params: {
+          to: getEmailFromToken(),
+          subject: "Login Notification",
+          body: `Hello ${getUserNameFromToken()}, you have successfully logged in to your account.`
+        },
+        headers: {
+          Authorization: `Bearer ${sessionStorage.getItem('token')}`
+        }
+      })
       setError('');
-      navigate('/tasks'); // Điều hướng đến trang danh sách công việc sau khi đăng nhập
+      navigate('/tasks');
     } catch (err) {
       setError(err.response?.data || 'Login failed');
     }

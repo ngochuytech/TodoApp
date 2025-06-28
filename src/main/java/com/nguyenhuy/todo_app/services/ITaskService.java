@@ -18,7 +18,4 @@ public interface ITaskService {
 
     List<TaskDTO> getAllTasksByTaskListId(Long taskListId) throws Exception;
 
-    List<TaskDTO> getAllTasksUncompledtedByUserId(Long userId) throws Exception;
-
-    List<TaskDTO> getAllTasksUncompletedByTaskListId(Long taskListId) throws Exception;
 }

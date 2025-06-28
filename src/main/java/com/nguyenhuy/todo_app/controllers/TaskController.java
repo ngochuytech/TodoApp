@@ -57,26 +57,6 @@ public class TaskController {
         }
     }
 
-    @GetMapping("/user/{userId}/uncompleted")
-    public ResponseEntity<?> getAllUncompletedTasksByUserId(@PathVariable Long userId) {
-        try {
-            List<TaskDTO> tasks = taskService.getAllTasksUncompledtedByUserId(userId);
-            return ResponseEntity.ok(tasks);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
-    }
-
-    @GetMapping("/task-list/{taskListId}/uncompleted")
-    public ResponseEntity<?> getAllUncompletedTasksByTaskListId(@PathVariable Long taskListId) {
-        try {
-            List<TaskDTO> tasks = taskService.getAllTasksUncompletedByTaskListId(taskListId);
-            return ResponseEntity.ok(tasks);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
-    }
-
     @PostMapping("")
     public ResponseEntity<?> createTask(@Valid @RequestBody TaskDTO taskDTO, BindingResult resutls) {
         try {

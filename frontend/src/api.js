@@ -47,4 +47,32 @@ export const getIdUserFromToken = () => {
   return null;
 };
 
+export const getUserNameFromToken = () => {
+  const token = sessionStorage.getItem('token');
+  if (token) {
+    try {
+      const decoded = jwtDecode(token);
+      return decoded.fullName;
+    } catch (error) {
+      console.error('Invalid token', error);
+      return null;
+    }
+  }
+  return null;
+};
+
+export const getEmailFromToken = () => {
+  const token = sessionStorage.getItem('token');
+  if (token) {
+    try {
+      const decoded = jwtDecode(token);
+      return decoded.email;
+    } catch (error) {
+      console.error('Invalid token', error);
+      return null;
+    }
+  }
+  return null;
+}
+
 export default api;

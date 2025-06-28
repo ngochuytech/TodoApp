@@ -17,6 +17,7 @@ public class UserDTO {
     private Long id;
     
     @JsonProperty("fullname")
+    @NotBlank(message = "Full name is required")
     private String fullName;
 
     @JsonProperty("password")

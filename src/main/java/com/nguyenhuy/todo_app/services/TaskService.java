@@ -123,45 +123,5 @@ public class TaskService implements ITaskService {
         )).toList();
         return taskDTOs;
     }
-
-    @Override
-    public List<TaskDTO> getAllTasksUncompledtedByUserId(Long userId) throws Exception {
-        if(userId == null) {
-            throw new Exception("User ID cannot be null");
-        } else if( userRepository.findById(userId).isEmpty()) {
-            throw new Exception("User not found with ID: " + userId);
-        }
-        List<Task> tasks = taskRepository.findTasksByUserIdAndCompletedFalse(userId);
-        return tasks.stream().map(task -> new TaskDTO(
-            task.getId(),
-            task.getTitle(),
-            task.getDescription(),
-            task.getCreatedAt(),
-            task.getDueDate(),
-            task.isCompleted(),
-            task.getUser().getId(),
-            task.getTaskList().getId()
-        )).toList();
-    }
-
-    @Override
-    public List<TaskDTO> getAllTasksUncompletedByTaskListId(Long taskListId) throws Exception {
-        if(taskListId == null) {
-            throw new Exception("Task List ID cannot be null");
-        } else if(taskListRepository.findById(taskListId).isEmpty()){
-            throw new Exception("Task List not found with ID: " + taskListId);
-        }
-        List<Task> tasks = taskRepository.findTaskByTaskListIdAndCompletedFalse(taskListId);
-        return tasks.stream().map(task -> new TaskDTO(
-            task.getId(),
-            task.getTitle(),
-            task.getDescription(),
-            task.getCreatedAt(),
-            task.getDueDate(),
-            task.isCompleted(),
-            task.getUser().getId(),
-            task.getTaskList().getId()
-        )).toList();
-    }
     
 }
