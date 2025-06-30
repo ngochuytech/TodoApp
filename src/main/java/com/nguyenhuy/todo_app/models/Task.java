@@ -40,6 +40,9 @@ public class Task extends BaseEntity {
    @Column(name = "completed", nullable = false)
    private boolean completed;
 
+   @Column(name = "reminded", nullable = false)
+   private boolean reminded;
+
    @ManyToOne
    @JoinColumn(name = "task_list_id", nullable = false)
    private TaskList taskList;
