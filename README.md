@@ -58,20 +58,19 @@ A web-based application for managing task lists and tasks, built with a React fr
    ```
 
 2. **Backend Setup**:
-   - Navigate to the backend directory (e.g., `backend/`):
-     ```bash
-     cd backend
-     ```
    - Configure the database in `application.yml`:
      ```yaml
-     spring:
-       datasource:
-         url: jdbc:mysql://localhost:3306/taskdb
-         username: root
-         password: yourpassword
-       jpa:
-         hibernate:
-           ddl-auto: update
+      spring:
+        datasource:
+          url: jdbc:mysql://localhost:3306/taskdb
+          username: root
+          password: yourpassword
+        jpa:
+          hibernate:
+            ddl-auto: update
+      mail:
+        username: <your-email>@gmail.com
+        password: <your-email-password
      ```
    - Build and run the backend:
      ```bash
@@ -135,9 +134,9 @@ A web-based application for managing task lists and tasks, built with a React fr
 
 *Add screenshots of the application here (e.g., task list accordion, task modal, filters).*
 
-- Login: `screenshots/login.png`
-- Task List View: `screenshots/task-list.png`
-- Task Modal: `screenshots/task-modal.png`
+- Login: ![Login](screenshots/login.png)
+- Task List View: ![TaskList](screenshots/task-list.png)
+- Task Modal: ![TaskModal](screenshots/task-modal.png)
 
 *Note: Update the repository with actual screenshot files and adjust paths accordingly.*
 
