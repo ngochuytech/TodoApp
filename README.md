@@ -134,9 +134,12 @@ A web-based application for managing task lists and tasks, built with a React fr
 
 *Add screenshots of the application here (e.g., task list accordion, task modal, filters).*
 
-- Login: ![Login](screenshots/login.png)
-- Task List View: ![TaskList](screenshots/task-list.png)
-- Task Modal: ![TaskModal](screenshots/task-modal.png)
+- Login: 
+  ![Login](screenshots/login.png)
+- Task List View: 
+  ![TaskList](screenshots/task-list.png)
+- Task Modal: 
+  ![TaskModal](screenshots/task-modal.png)
 
 *Note: Update the repository with actual screenshot files and adjust paths accordingly.*
 
