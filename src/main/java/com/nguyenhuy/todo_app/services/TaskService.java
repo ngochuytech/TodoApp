@@ -75,7 +75,6 @@ public class TaskService implements ITaskService {
         existingTask.setCompleted(taskDTO.isCompleted());
         existingTask.setTaskList(existingTaskList);
         existingTask.setUser(existingUser);
-        System.out.println("Updating task: " + existingTask);
         return taskRepository.save(existingTask);
     }
 

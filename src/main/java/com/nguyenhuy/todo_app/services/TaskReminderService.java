@@ -17,7 +17,7 @@ public class TaskReminderService {
     private final TaskRepository taskRepository;
     private final EmailService emailService;
 
-    @Scheduled(cron = "0 * * * * *")
+    @Scheduled(cron = "0 * * ? * *")
     public void remindOverdueTasks() {
             List<Task> overdueTasks = taskRepository.findAll().stream()
                 .filter(task -> !task.isCompleted()

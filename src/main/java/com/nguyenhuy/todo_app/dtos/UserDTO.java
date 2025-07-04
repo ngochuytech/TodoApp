@@ -16,7 +16,7 @@ public class UserDTO {
     @JsonProperty("id")
     private Long id;
     
-    @JsonProperty("fullname")
+    @JsonProperty("fullName")
     @NotBlank(message = "Full name is required")
     private String fullName;
 

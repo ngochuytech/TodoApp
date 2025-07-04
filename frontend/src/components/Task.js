@@ -24,7 +24,6 @@ const Task = ({ taskListId, onTaskChange }) => {
 
   const fetchTasks = async () => {
     try {
-      console.log(`Fetching tasks for task list ID: ${taskListId}, filter: ${filter}`);
       const response = await api.get(`/api/tasks/task-list/${taskListId}`);
       const fetchedTasks = response.data;
       setTasks(fetchedTasks);

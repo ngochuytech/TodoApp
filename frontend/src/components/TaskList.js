@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import api, { getIdUserFromToken } from '../api';
+import api from '../api';
 import Task from './Task';
 import Header from './Header';
 import { Collapse } from 'bootstrap';
@@ -30,7 +30,6 @@ const TaskList = () => {
   const fetchTaskLists = async () => {
     try {
       const response = await api.get(`/api/task-lists/${userId}`);
-      console.log('TaskLists fetched:', response.data);
       const lists = response.data;
       setTaskLists(lists);
       // Check completion status for each task list

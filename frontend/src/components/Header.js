@@ -9,7 +9,6 @@ const Header = () => {
 
   // Fetch username from API if not in sessionStorage
   useEffect(() => {
-    console.log("username in sessionStorage:", username);
     
     if (!username && userId) {
       const fetchUsername = async () => {
